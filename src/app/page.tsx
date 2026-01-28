@@ -2,6 +2,14 @@
 
 import { useState } from 'react';
 import AudioRecorder from '@/components/AudioRecorder';
+import FileUpload from '@/components/FileUpload';
+
+interface PdfFile {
+  id: string;
+  file: File;
+  fileName: string;
+  fileSize: number;
+}
 
 export default function Home() {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -9,8 +17,65 @@ export default function Home() {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcribeError, setTranscribeError] = useState<string | null>(null);
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
+  const [pdfFiles, setPdfFiles] = useState<PdfFile[]>([]);
+  const [notes, setNotes] = useState<{ cues: string; notes: string; summary: string } | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   const TRANSCRIPT_PREVIEW_LENGTH = 500;
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handlePdfUpload = (file: File) => {
+    const newPdf: PdfFile = {
+      id: crypto.randomUUID(),
+      file,
+      fileName: file.name,
+      fileSize: file.size,
+    };
+    setPdfFiles((prev) => [...prev, newPdf]);
+  };
+
+  const removePdf = (id: string) => {
+    setPdfFiles((prev) => prev.filter((pdf) => pdf.id !== id));
+  };
+
+  const handleGenerateNotes = async () => {
+    if (!transcript && pdfFiles.length === 0) return;
+
+    setIsGenerating(true);
+    setGenerateError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('transcript', transcript);
+
+      pdfFiles.forEach((pdf) => {
+        formData.append('pdfs', pdf.file);
+      });
+
+      const response = await fetch('/api/generate-notes', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate notes');
+      }
+
+      setNotes(data.notes);
+    } catch (error) {
+      setGenerateError(error instanceof Error ? error.message : 'Failed to generate notes');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleRecordingComplete = (blob: Blob) => {
     setAudioBlob(blob);
@@ -134,28 +199,92 @@ export default function Home() {
         </section>
 
         {/* Step 3: Upload Slides (Optional) */}
-        <section className="mb-12 opacity-40">
+        <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-zinc-300 text-white text-sm font-medium">
+            <span className="flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-medium bg-zinc-900">
               3
             </span>
-            <h2 className="text-xl font-medium text-zinc-400">Upload Slides (Optional)</h2>
+            <h2 className="text-xl font-medium text-zinc-900">Upload Slides (Optional)</h2>
           </div>
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-zinc-100 text-center text-zinc-400">
-            Optional: Upload lecture slides
+
+          <div className="bg-white rounded-xl p-8 shadow-sm border border-zinc-100">
+            {/* List of uploaded PDFs */}
+            {pdfFiles.length > 0 && (
+              <div className="space-y-3 mb-6">
+                {pdfFiles.map((pdf) => (
+                  <div key={pdf.id} className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <svg className="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <div>
+                        <p className="text-zinc-800 text-sm font-medium">{pdf.fileName}</p>
+                        <p className="text-xs text-zinc-500">
+                          {formatFileSize(pdf.fileSize)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removePdf(pdf.id)}
+                      className="text-zinc-400 hover:text-zinc-600"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload area */}
+            <div>
+              <FileUpload
+                onFileSelect={handlePdfUpload}
+                accept=".pdf"
+                label={pdfFiles.length > 0 ? "Add another PDF" : "Upload lecture slides (PDF)"}
+              />
+              <p className="text-sm text-zinc-400 mt-3 text-center">
+                This step is optional - you can skip to generate notes
+              </p>
+            </div>
           </div>
         </section>
 
         {/* Step 4: Generate Notes */}
-        <section className="mb-12 opacity-40">
+        <section className={`mb-12 ${!transcript && pdfFiles.length === 0 ? 'opacity-40' : ''}`}>
           <div className="flex items-center gap-3 mb-6">
-            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-zinc-300 text-white text-sm font-medium">
+            <span className={`flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-medium ${transcript || pdfFiles.length > 0 ? 'bg-zinc-900' : 'bg-zinc-300'}`}>
               4
             </span>
-            <h2 className="text-xl font-medium text-zinc-400">Generate Notes</h2>
+            <h2 className={`text-xl font-medium ${transcript || pdfFiles.length > 0 ? 'text-zinc-900' : 'text-zinc-400'}`}>Generate Notes</h2>
           </div>
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-zinc-100 text-center text-zinc-400">
-            Generate Cornell notes
+
+          <div className="bg-white rounded-xl p-8 shadow-sm border border-zinc-100">
+            {!transcript && pdfFiles.length === 0 ? (
+              <p className="text-center text-zinc-400">Add a transcript or PDF first</p>
+            ) : notes ? (
+              <div className="text-center">
+                <p className="text-green-600 mb-4">Notes generated successfully!</p>
+                {/* Notes preview will be added in Phase 6 */}
+              </div>
+            ) : (
+              <div className="text-center">
+                <button
+                  onClick={handleGenerateNotes}
+                  disabled={isGenerating}
+                  className="px-6 py-3 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isGenerating ? 'Generating...' : 'Generate Cornell Notes'}
+                </button>
+                {isGenerating && (
+                  <p className="text-sm text-zinc-500 mt-3">This may take a moment...</p>
+                )}
+                {generateError && (
+                  <p className="text-sm text-red-600 mt-3">{generateError}</p>
+                )}
+              </div>
+            )}
           </div>
         </section>
       </main>
