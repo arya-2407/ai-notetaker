@@ -20,6 +20,7 @@ export default function AudioRecorder({ onRecordingComplete }: AudioRecorderProp
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationRef = useRef<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -150,6 +151,17 @@ export default function AudioRecorder({ onRecordingComplete }: AudioRecorderProp
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+    setAudioUrl(url);
+    setAudioSize(file.size);
+    setDuration(0);
+    onRecordingComplete(file);
+  };
+
   // Start waveform visualization when recording
   useEffect(() => {
     if (isRecording) {
@@ -235,6 +247,24 @@ export default function AudioRecorder({ onRecordingComplete }: AudioRecorderProp
             </span>
           )}
         </button>
+
+        {/* File upload option */}
+        <div className="flex items-center gap-2 text-sm text-zinc-500">
+          <span>or</span>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="text-zinc-700 underline hover:text-zinc-900"
+          >
+            upload an audio file
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/*"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+        </div>
       </div>
     </div>
   );
