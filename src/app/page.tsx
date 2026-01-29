@@ -264,9 +264,36 @@ export default function Home() {
             {!transcript && pdfFiles.length === 0 ? (
               <p className="text-center text-zinc-400">Add a transcript or PDF first</p>
             ) : notes ? (
-              <div className="text-center">
-                <p className="text-green-600 mb-4">Notes generated successfully!</p>
-                {/* Notes preview will be added in Phase 6 */}
+              <div className="space-y-6">
+                <p className="text-green-600 text-center mb-4">Notes generated!</p>
+
+                <div className="border border-zinc-200 rounded-lg overflow-hidden">
+                  <div className="bg-zinc-100 px-4 py-2 border-b border-zinc-200">
+                    <h3 className="font-medium text-zinc-700 text-sm">Cues</h3>
+                  </div>
+                  <div className="p-4 text-sm text-zinc-800 whitespace-pre-wrap">{notes.cues}</div>
+                </div>
+
+                <div className="border border-zinc-200 rounded-lg overflow-hidden">
+                  <div className="bg-zinc-100 px-4 py-2 border-b border-zinc-200">
+                    <h3 className="font-medium text-zinc-700 text-sm">Notes</h3>
+                  </div>
+                  <div className="p-4 text-sm text-zinc-800 whitespace-pre-wrap max-h-96 overflow-y-auto">{notes.notes}</div>
+                </div>
+
+                <div className="border border-zinc-200 rounded-lg overflow-hidden">
+                  <div className="bg-zinc-100 px-4 py-2 border-b border-zinc-200">
+                    <h3 className="font-medium text-zinc-700 text-sm">Summary</h3>
+                  </div>
+                  <div className="p-4 text-sm text-zinc-800 whitespace-pre-wrap">{notes.summary}</div>
+                </div>
+
+                <button
+                  onClick={() => setNotes(null)}
+                  className="text-sm text-zinc-500 hover:text-zinc-700 underline"
+                >
+                  Regenerate notes
+                </button>
               </div>
             ) : (
               <div className="text-center">

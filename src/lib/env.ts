@@ -6,7 +6,7 @@ export const env = {
   moonshot: {
     apiKey: process.env.MOONSHOT_API_KEY || '',
     baseUrl: 'https://api.moonshot.ai/v1',
-    model: 'kimi-k2.5-preview',
+    model: 'kimi-k2.5',
     isConfigured: !!process.env.MOONSHOT_API_KEY && process.env.MOONSHOT_API_KEY !== 'your_moonshot_api_key_here',
   },
 };
