@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import AudioRecorder from '@/components/AudioRecorder';
 import FileUpload from '@/components/FileUpload';
 
@@ -12,15 +14,16 @@ interface PdfFile {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [transcript, setTranscript] = useState<string>('');
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcribeError, setTranscribeError] = useState<string | null>(null);
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
   const [pdfFiles, setPdfFiles] = useState<PdfFile[]>([]);
-  const [notes, setNotes] = useState<{ cues: string; notes: string; summary: string } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
+  const [notesReady, setNotesReady] = useState(false);
 
   const TRANSCRIPT_PREVIEW_LENGTH = 500;
 
@@ -49,6 +52,7 @@ export default function Home() {
 
     setIsGenerating(true);
     setGenerateError(null);
+    setNotesReady(false);
 
     try {
       const formData = new FormData();
@@ -69,12 +73,18 @@ export default function Home() {
         throw new Error(data.error || 'Failed to generate notes');
       }
 
-      setNotes(data.notes);
+      // Save notes to localStorage for the /notes page
+      localStorage.setItem('generatedNotes', JSON.stringify(data.notes));
+      setNotesReady(true);
     } catch (error) {
       setGenerateError(error instanceof Error ? error.message : 'Failed to generate notes');
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleViewNotes = () => {
+    router.push('/notes');
   };
 
   const handleRecordingComplete = (blob: Blob) => {
@@ -263,36 +273,32 @@ export default function Home() {
           <div className="bg-white rounded-xl p-8 shadow-sm border border-zinc-100">
             {!transcript && pdfFiles.length === 0 ? (
               <p className="text-center text-zinc-400">Add a transcript or PDF first</p>
-            ) : notes ? (
-              <div className="space-y-6">
-                <p className="text-green-600 text-center mb-4">Notes generated!</p>
-
-                <div className="border border-zinc-200 rounded-lg overflow-hidden">
-                  <div className="bg-zinc-100 px-4 py-2 border-b border-zinc-200">
-                    <h3 className="font-medium text-zinc-700 text-sm">Cues</h3>
-                  </div>
-                  <div className="p-4 text-sm text-zinc-800 whitespace-pre-wrap">{notes.cues}</div>
+            ) : isGenerating ? (
+              <div className="flex flex-col items-center py-8">
+                <DotLottieReact
+                  src="https://lottie.host/47c3870e-33fd-4f76-bbf7-f40fca2d71f7/U6WWKUzOWH.lottie"
+                  loop
+                  autoplay
+                  style={{ width: 150, height: 150 }}
+                />
+                <p className="text-zinc-600 mt-4">Generating your notes...</p>
+              </div>
+            ) : notesReady ? (
+              <div className="flex flex-col items-center py-8">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
-
-                <div className="border border-zinc-200 rounded-lg overflow-hidden">
-                  <div className="bg-zinc-100 px-4 py-2 border-b border-zinc-200">
-                    <h3 className="font-medium text-zinc-700 text-sm">Notes</h3>
-                  </div>
-                  <div className="p-4 text-sm text-zinc-800 whitespace-pre-wrap max-h-96 overflow-y-auto">{notes.notes}</div>
-                </div>
-
-                <div className="border border-zinc-200 rounded-lg overflow-hidden">
-                  <div className="bg-zinc-100 px-4 py-2 border-b border-zinc-200">
-                    <h3 className="font-medium text-zinc-700 text-sm">Summary</h3>
-                  </div>
-                  <div className="p-4 text-sm text-zinc-800 whitespace-pre-wrap">{notes.summary}</div>
-                </div>
-
+                <p className="text-zinc-800 font-medium mb-4">Notes ready!</p>
                 <button
-                  onClick={() => setNotes(null)}
-                  className="text-sm text-zinc-500 hover:text-zinc-700 underline"
+                  onClick={handleViewNotes}
+                  className="px-6 py-3 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors flex items-center gap-2"
                 >
-                  Regenerate notes
+                  View Notes
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
               </div>
             ) : (
@@ -302,11 +308,8 @@ export default function Home() {
                   disabled={isGenerating}
                   className="px-6 py-3 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {isGenerating ? 'Generating...' : 'Generate Cornell Notes'}
+                  Generate Notes
                 </button>
-                {isGenerating && (
-                  <p className="text-sm text-zinc-500 mt-3">This may take a moment...</p>
-                )}
                 {generateError && (
                   <p className="text-sm text-red-600 mt-3">{generateError}</p>
                 )}

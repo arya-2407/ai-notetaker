@@ -62,6 +62,8 @@ export async function POST(request: NextRequest) {
 
     const responseText = completion.choices[0]?.message?.content || '';
 
+    console.log('Kimi response:', JSON.stringify(responseText));
+
     // Parse the JSON response
     let notes;
     try {

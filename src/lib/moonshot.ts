@@ -56,8 +56,8 @@ export const CORNELL_NOTES_PROMPT = `You are an expert academic note-taker. Gene
 
 Cornell Notes Format:
 1. **Cues (Left Column)**: Key questions, terms, and prompts that help recall main ideas
-2. **Notes (Right Column)**: Detailed notes, explanations, examples, and important points
-3. **Summary (Bottom)**: A concise summary of the entire lecture in 3-5 sentences
+2. **Notes (Right Column)**: Detailed notes, explanations, examples, and important points. Do not make this concise, the objective here is to provide depth and complete understanding of the topic.
+3. **Summary (Bottom)**: Infer subropics and write a 3-4 sentence summary for each
 
 Instructions:
 - Extract all key concepts, definitions, and important details
@@ -65,12 +65,15 @@ Instructions:
 - Organize notes logically by topic/theme
 - Include any formulas, diagrams descriptions, or visual elements mentioned
 - The summary should capture the essence of the entire lecture
+- you are being fed: either a transcript of the professor talking or the lecture slides or both (most probably both).
+- the professor may or may not reference the slides
+- the professor may also reference the whiteboard they are writing on. However, you do not have context of the whiteboard, so do not try to fill in the gaps when unclear about something.
 
 Return your response as JSON in this exact format:
 {
   "cues": "Bullet points of questions and key terms, one per line",
   "notes": "Detailed notes organized by topic, using markdown formatting",
-  "summary": "3-5 sentence summary of the lecture"
+  "summary": "Summary per subtopic"
 }
 
 Only return the JSON, no additional text.`;
