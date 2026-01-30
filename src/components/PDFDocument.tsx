@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     color: '#1a1a1a',
     marginBottom: 4,
   },
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 11,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     color: '#374151',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -71,21 +71,21 @@ const styles = StyleSheet.create({
   },
   h1: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     marginBottom: 8,
     marginTop: 12,
     color: '#1a1a1a',
   },
   h2: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     marginBottom: 6,
     marginTop: 10,
     color: '#1a1a1a',
   },
   h3: {
     fontSize: 11,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     marginBottom: 4,
     marginTop: 8,
     color: '#1a1a1a',
@@ -106,10 +106,10 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
   },
   bold: {
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
   },
   italic: {
-    fontStyle: 'italic',
+    fontFamily: 'Helvetica-Oblique',
   },
 });
 

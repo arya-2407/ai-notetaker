@@ -124,27 +124,27 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#faf9f7]">
-      <main className="max-w-2xl mx-auto px-6 py-16">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
         {/* Header */}
-        <header className="text-center mb-16">
-          <h1 className="text-4xl font-serif font-semibold text-zinc-900 mb-3">
+        <header className="text-center mb-12 sm:mb-16">
+          <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-zinc-900 mb-2 sm:mb-3">
             Notetaker
           </h1>
-          <p className="text-zinc-600">
+          <p className="text-zinc-600 text-sm sm:text-base">
             Record lectures, generate Cornell notes
           </p>
         </header>
 
         {/* Step 1: Audio Recording */}
-        <section className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-zinc-900 text-white text-sm font-medium">
+        <section className="mb-8 sm:mb-12">
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
+            <span className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-zinc-900 text-white text-xs sm:text-sm font-medium">
               1
             </span>
-            <h2 className="text-xl font-medium text-zinc-900">Record Audio</h2>
+            <h2 className="text-lg sm:text-xl font-medium text-zinc-900">Record Audio</h2>
           </div>
 
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-zinc-100">
+          <div className="bg-white rounded-xl p-5 sm:p-8 shadow-sm border border-zinc-100">
             <AudioRecorder onRecordingComplete={handleRecordingComplete} />
           </div>
 
@@ -156,15 +156,15 @@ export default function Home() {
         </section>
 
         {/* Step 2: Transcribe */}
-        <section className={`mb-12 ${!audioBlob ? 'opacity-40' : ''}`}>
-          <div className="flex items-center gap-3 mb-6">
-            <span className={`flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-medium ${audioBlob ? 'bg-zinc-900' : 'bg-zinc-300'}`}>
+        <section className={`mb-8 sm:mb-12 transition-opacity ${!audioBlob ? 'opacity-40' : ''}`}>
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
+            <span className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-white text-xs sm:text-sm font-medium ${audioBlob ? 'bg-zinc-900' : 'bg-zinc-300'}`}>
               2
             </span>
-            <h2 className={`text-xl font-medium ${audioBlob ? 'text-zinc-900' : 'text-zinc-400'}`}>Transcribe</h2>
+            <h2 className={`text-lg sm:text-xl font-medium ${audioBlob ? 'text-zinc-900' : 'text-zinc-400'}`}>Transcribe</h2>
           </div>
 
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-zinc-100">
+          <div className="bg-white rounded-xl p-5 sm:p-8 shadow-sm border border-zinc-100">
             {!audioBlob ? (
               <p className="text-center text-zinc-400">Record audio first</p>
             ) : transcript ? (
@@ -209,15 +209,15 @@ export default function Home() {
         </section>
 
         {/* Step 3: Upload Slides (Optional) */}
-        <section className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-medium bg-zinc-900">
+        <section className="mb-8 sm:mb-12">
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
+            <span className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-white text-xs sm:text-sm font-medium bg-zinc-900">
               3
             </span>
-            <h2 className="text-xl font-medium text-zinc-900">Upload Slides (Optional)</h2>
+            <h2 className="text-lg sm:text-xl font-medium text-zinc-900">Upload Slides <span className="text-zinc-400 font-normal">(Optional)</span></h2>
           </div>
 
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-zinc-100">
+          <div className="bg-white rounded-xl p-5 sm:p-8 shadow-sm border border-zinc-100">
             {/* List of uploaded PDFs */}
             {pdfFiles.length > 0 && (
               <div className="space-y-3 mb-6">
@@ -262,15 +262,15 @@ export default function Home() {
         </section>
 
         {/* Step 4: Generate Notes */}
-        <section className={`mb-12 ${!transcript && pdfFiles.length === 0 ? 'opacity-40' : ''}`}>
-          <div className="flex items-center gap-3 mb-6">
-            <span className={`flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-medium ${transcript || pdfFiles.length > 0 ? 'bg-zinc-900' : 'bg-zinc-300'}`}>
+        <section className={`mb-8 sm:mb-12 transition-opacity ${!transcript && pdfFiles.length === 0 ? 'opacity-40' : ''}`}>
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
+            <span className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-white text-xs sm:text-sm font-medium ${transcript || pdfFiles.length > 0 ? 'bg-zinc-900' : 'bg-zinc-300'}`}>
               4
             </span>
-            <h2 className={`text-xl font-medium ${transcript || pdfFiles.length > 0 ? 'text-zinc-900' : 'text-zinc-400'}`}>Generate Notes</h2>
+            <h2 className={`text-lg sm:text-xl font-medium ${transcript || pdfFiles.length > 0 ? 'text-zinc-900' : 'text-zinc-400'}`}>Generate Notes</h2>
           </div>
 
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-zinc-100">
+          <div className="bg-white rounded-xl p-5 sm:p-8 shadow-sm border border-zinc-100">
             {!transcript && pdfFiles.length === 0 ? (
               <p className="text-center text-zinc-400">Add a transcript or PDF first</p>
             ) : isGenerating ? (
