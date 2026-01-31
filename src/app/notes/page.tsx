@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import PDFExport from '@/components/PDFExport';
 
@@ -108,128 +109,139 @@ export default function NotesPage() {
 
   return (
     <div className="min-h-screen bg-[#faf9f7] py-6 sm:py-8">
-      <main className="max-w-4xl mx-auto px-4 sm:px-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
-        <header className="text-center mb-4">
+        <header className="text-center mb-6">
           <h1 className="text-2xl sm:text-3xl font-serif font-semibold text-zinc-900 mb-1">
             Your Notes
           </h1>
           <p className="text-zinc-500 text-sm">
-            Preview your notes and download as PDF
+            Preview, refine, and download as PDF
           </p>
         </header>
 
-        {/* Read-only Markdown Preview - A4 dimensions */}
-        <div
-          className="bg-white rounded-xl shadow-sm border border-zinc-100 overflow-hidden mx-auto"
-          style={{ width: '210mm', maxWidth: '100%', height: '297mm', maxHeight: '70vh' }}
-        >
-          <div className="overflow-y-auto h-full">
-            {/* Notes Section */}
-            <div className="border-b border-zinc-100">
-              <div className="px-4 sm:px-6 py-3 bg-zinc-50 border-b border-zinc-100 sticky top-0">
-                <h2 className="text-sm font-semibold text-zinc-700 uppercase tracking-wide">
-                  Notes
-                </h2>
-              </div>
-              <div className="px-4 sm:px-6 py-4">
-                <MarkdownRenderer content={notes.notes} className="text-sm text-zinc-700" />
+        {/* Two-column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
+          {/* Left Column - Preview & Actions */}
+          <div className="flex flex-col gap-4">
+            {/* Read-only Markdown Preview - A4 dimensions */}
+            <div
+              className="bg-white rounded-xl shadow-sm border border-zinc-100 overflow-hidden"
+              style={{ height: '297mm', maxHeight: '70vh' }}
+            >
+              <div className="overflow-y-auto h-full">
+                {/* Notes Section */}
+                <div className="border-b border-zinc-100">
+                  <div className="px-4 sm:px-6 py-3 bg-zinc-50 border-b border-zinc-100 sticky top-0">
+                    <h2 className="text-sm font-semibold text-zinc-700 uppercase tracking-wide">
+                      Notes
+                    </h2>
+                  </div>
+                  <div className="px-4 sm:px-6 py-4">
+                    <MarkdownRenderer content={notes.notes} className="text-sm text-zinc-700" />
+                  </div>
+                </div>
+
+                {/* Cues & Questions Section */}
+                <div className="border-b border-zinc-100">
+                  <div className="px-4 sm:px-6 py-3 bg-amber-50 border-b border-zinc-100 sticky top-0">
+                    <h2 className="text-sm font-semibold text-zinc-700 uppercase tracking-wide">
+                      Cues & Questions
+                    </h2>
+                  </div>
+                  <div className="px-4 sm:px-6 py-4">
+                    <MarkdownRenderer content={notes.cues} className="text-sm text-zinc-700" />
+                  </div>
+                </div>
+
+                {/* Summary Section */}
+                <div>
+                  <div className="px-4 sm:px-6 py-3 bg-blue-50 border-b border-zinc-100 sticky top-0">
+                    <h2 className="text-sm font-semibold text-zinc-700 uppercase tracking-wide">
+                      Summary
+                    </h2>
+                  </div>
+                  <div className="px-4 sm:px-6 py-4">
+                    <MarkdownRenderer content={notes.summary} className="text-sm text-zinc-700" />
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Cues & Questions Section */}
-            <div className="border-b border-zinc-100">
-              <div className="px-4 sm:px-6 py-3 bg-amber-50 border-b border-zinc-100 sticky top-0">
-                <h2 className="text-sm font-semibold text-zinc-700 uppercase tracking-wide">
-                  Cues & Questions
-                </h2>
-              </div>
-              <div className="px-4 sm:px-6 py-4">
-                <MarkdownRenderer content={notes.cues} className="text-sm text-zinc-700" />
-              </div>
-            </div>
-
-            {/* Summary Section */}
-            <div>
-              <div className="px-4 sm:px-6 py-3 bg-blue-50 border-b border-zinc-100 sticky top-0">
-                <h2 className="text-sm font-semibold text-zinc-700 uppercase tracking-wide">
-                  Summary
-                </h2>
-              </div>
-              <div className="px-4 sm:px-6 py-4">
-                <MarkdownRenderer content={notes.summary} className="text-sm text-zinc-700" />
-              </div>
+            {/* Actions */}
+            <div className="flex items-center justify-center gap-4">
+              <PDFExport notes={notes} prominent />
+              <button
+                onClick={handleStartOver}
+                className="px-8 py-4 text-lg font-medium rounded-xl border-2 border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Start over
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* Refinement UI */}
-        <div className="mt-6 max-w-2xl mx-auto">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={refinementInput}
-              onChange={(e) => setRefinementInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleRefine();
-                }
-              }}
-              placeholder="Refine your notes..."
-              disabled={isRefining}
-              className="flex-1 px-4 py-3 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent disabled:bg-zinc-50 disabled:text-zinc-400"
-            />
-            <button
-              onClick={handleRefine}
-              disabled={isRefining || !refinementInput.trim()}
-              className="px-4 py-3 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:bg-zinc-300 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {isRefining ? (
-                <>
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Refining...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </>
+          {/* Right Column - Refinement UI */}
+          <div className="bg-white rounded-xl shadow-sm border border-zinc-100 p-6 h-fit sticky top-6">
+            <h2 className="text-lg font-bold text-zinc-900 mb-4 text-center">Refine Your Notes</h2>
+            <p className="text-sm text-zinc-600 mb-4">
+              Ask for changes to improve your notes
+            </p>
+
+            <div className="flex flex-col gap-2">
+              <textarea
+                value={refinementInput}
+                onChange={(e) => setRefinementInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleRefine();
+                  }
+                }}
+                placeholder='"Make it more concise", "Add more depth to topic X", "link some YouTube videos in the summary"'
+                disabled={isRefining}
+                rows={4}
+                className="w-full px-4 py-3 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent disabled:bg-zinc-50 disabled:text-zinc-400 resize-none"
+              />
+              <button
+                onClick={handleRefine}
+                disabled={isRefining || !refinementInput.trim()}
+                className="w-full px-4 py-3 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:bg-zinc-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[48px]"
+              >
+                {isRefining ? (
+                  <DotLottieReact
+                    src="https://lottie.host/47c3870e-33fd-4f76-bbf7-f40fca2d71f7/U6WWKUzOWH.lottie"
+                    loop
+                    autoplay
+                    style={{ width: 32, height: 32 }}
+                  />
+                ) : (
+                  <>
+                    Refine
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </>
+                )}
+              </button>
+              {refineError && (
+                <p className="text-sm text-red-600">{refineError}</p>
               )}
-            </button>
+              {previousNotes && (
+                <button
+                  onClick={handleUndo}
+                  className="text-sm text-zinc-500 hover:text-zinc-700 flex items-center justify-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                  Undo last refinement
+                </button>
+              )}
+            </div>
           </div>
-          {refineError && (
-            <p className="mt-2 text-sm text-red-600">{refineError}</p>
-          )}
-          {previousNotes && (
-            <button
-              onClick={handleUndo}
-              className="mt-2 text-sm text-zinc-500 hover:text-zinc-700 flex items-center gap-1"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-              </svg>
-              Undo last refinement
-            </button>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center justify-center gap-4 py-6">
-          <PDFExport notes={notes} prominent />
-          <button
-            onClick={handleStartOver}
-            className="px-8 py-4 text-lg font-medium rounded-xl border-2 border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50 transition-colors flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Start over
-          </button>
         </div>
       </main>
     </div>
