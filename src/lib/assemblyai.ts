@@ -18,7 +18,7 @@ export async function transcribeAudio(audioData: Buffer): Promise<string> {
       authorization: apiKey,
       'content-type': 'application/octet-stream',
     },
-    body: audioData,
+    body: new Uint8Array(audioData),
   });
 
   if (!uploadResponse.ok) {

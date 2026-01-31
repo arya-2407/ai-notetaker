@@ -131,7 +131,7 @@ export default function Home() {
             Notetaker
           </h1>
           <p className="text-zinc-600 text-sm sm:text-base">
-            Record lectures, generate Cornell notes
+            Record lectures, generate notes
           </p>
         </header>
 

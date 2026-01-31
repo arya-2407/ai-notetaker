@@ -16,7 +16,7 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: "Notetaker",
-  description: "Record lectures, generate Cornell notes",
+  description: "Record lectures, generate notes",
 };
 
 export default function RootLayout({
