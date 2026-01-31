@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import PDFExport from '@/components/PDFExport';
 
 interface CornellNotes {
@@ -132,8 +132,8 @@ export default function NotesPage() {
                   Notes
                 </h2>
               </div>
-              <div className="px-4 sm:px-6 py-4 markdown-content">
-                <ReactMarkdown>{notes.notes}</ReactMarkdown>
+              <div className="px-4 sm:px-6 py-4">
+                <MarkdownRenderer content={notes.notes} className="text-sm text-zinc-700" />
               </div>
             </div>
 
@@ -144,8 +144,8 @@ export default function NotesPage() {
                   Cues & Questions
                 </h2>
               </div>
-              <div className="px-4 sm:px-6 py-4 markdown-content">
-                <ReactMarkdown>{notes.cues}</ReactMarkdown>
+              <div className="px-4 sm:px-6 py-4">
+                <MarkdownRenderer content={notes.cues} className="text-sm text-zinc-700" />
               </div>
             </div>
 
@@ -156,8 +156,8 @@ export default function NotesPage() {
                   Summary
                 </h2>
               </div>
-              <div className="px-4 sm:px-6 py-4 markdown-content">
-                <ReactMarkdown>{notes.summary}</ReactMarkdown>
+              <div className="px-4 sm:px-6 py-4">
+                <MarkdownRenderer content={notes.summary} className="text-sm text-zinc-700" />
               </div>
             </div>
           </div>

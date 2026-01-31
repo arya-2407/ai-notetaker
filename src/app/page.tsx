@@ -270,27 +270,27 @@ export default function Home() {
             <h2 className={`text-lg sm:text-xl font-medium ${transcript || pdfFiles.length > 0 ? 'text-zinc-900' : 'text-zinc-400'}`}>Generate Notes</h2>
           </div>
 
-          <div className="bg-white rounded-xl p-5 sm:p-8 shadow-sm border border-zinc-100">
+          <div className="bg-white rounded-xl p-5 sm:p-8 shadow-sm border border-zinc-100 min-h-44 flex items-center justify-center">
             {!transcript && pdfFiles.length === 0 ? (
               <p className="text-center text-zinc-400">Add a transcript or PDF first</p>
             ) : isGenerating ? (
-              <div className="flex flex-col items-center py-8">
+              <div className="flex flex-col items-center">
                 <DotLottieReact
                   src="https://lottie.host/47c3870e-33fd-4f76-bbf7-f40fca2d71f7/U6WWKUzOWH.lottie"
                   loop
                   autoplay
-                  style={{ width: 150, height: 150 }}
+                  style={{ width: 100, height: 100 }}
                 />
-                <p className="text-zinc-600 mt-4">Generating your notes...</p>
+                <p className="text-zinc-600 mt-2">Generating...</p>
               </div>
             ) : notesReady ? (
-              <div className="flex flex-col items-center py-8">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-zinc-800 font-medium mb-4">Notes ready!</p>
+                <p className="text-zinc-800 font-medium">Notes ready!</p>
                 <button
                   onClick={handleViewNotes}
                   className="px-6 py-3 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors flex items-center gap-2"
