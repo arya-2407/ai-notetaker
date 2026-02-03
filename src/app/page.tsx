@@ -150,7 +150,7 @@ export default function Home() {
 
           {audioBlob && (
             <p className="text-sm text-green-600 mt-4 text-center">
-              Audio recorded successfully
+              {/* Audio recorded successfully */}
             </p>
           )}
         </section>
@@ -214,7 +214,7 @@ export default function Home() {
             <span className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-white text-xs sm:text-sm font-medium bg-zinc-900">
               3
             </span>
-            <h2 className="text-lg sm:text-xl font-medium text-zinc-900">Upload Slides <span className="text-zinc-400 font-normal">(Optional)</span></h2>
+            <h2 className="text-lg sm:text-xl font-medium text-zinc-900">Upload Slides <span className="text-zinc-400 font-normal">(Optional, but Highly Recommended)</span></h2>
           </div>
 
           <div className="bg-white rounded-xl p-5 sm:p-8 shadow-sm border border-zinc-100">
@@ -255,7 +255,7 @@ export default function Home() {
                 label={pdfFiles.length > 0 ? "Add another PDF" : "Upload lecture slides (PDF)"}
               />
               <p className="text-sm text-zinc-400 mt-3 text-center">
-                This step is optional - you can skip to generate notes
+                Highly Recommended, this helps AI gain more context!
               </p>
             </div>
           </div>

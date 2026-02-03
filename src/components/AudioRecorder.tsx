@@ -8,8 +8,10 @@ interface AudioRecorderProps {
 
 export default function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
   const [duration, setDuration] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
   const [audioSize, setAudioSize] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,9 +83,20 @@ export default function AudioRecorder({ onRecordingComplete }: AudioRecorderProp
     draw();
   }, [isRecording]);
 
+  const cleanupAudioUrl = useCallback(() => {
+    if (currentAudioUrl) {
+      URL.revokeObjectURL(currentAudioUrl);
+    }
+  }, [currentAudioUrl]);
+
   const startRecording = async () => {
+    // Prevent double-click
+    if (isRecording || isInitializing) return;
+
+    setIsInitializing(true);
+    setError(null);
+
     try {
-      setError(null);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
@@ -107,7 +120,12 @@ export default function AudioRecorder({ onRecordingComplete }: AudioRecorderProp
 
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+
+        // Cleanup old URL before creating new one
+        cleanupAudioUrl();
+
         const url = URL.createObjectURL(blob);
+        setCurrentAudioUrl(url);
         setAudioUrl(url);
         setAudioSize(blob.size);
         onRecordingComplete(blob);
@@ -118,8 +136,16 @@ export default function AudioRecorder({ onRecordingComplete }: AudioRecorderProp
         }
       };
 
+      // Clear any existing timer BEFORE starting new one
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      // Start recording FIRST for immediate feedback
       mediaRecorder.start(100);
       setIsRecording(true);
+      setIsInitializing(false);
       setDuration(0);
       setAudioUrl(null);
 
@@ -129,6 +155,7 @@ export default function AudioRecorder({ onRecordingComplete }: AudioRecorderProp
       }, 1000);
 
     } catch (err) {
+      setIsInitializing(false);
       setError('Could not access microphone. Please grant permission.');
       console.error('Error accessing microphone:', err);
     }
@@ -155,7 +182,11 @@ export default function AudioRecorder({ onRecordingComplete }: AudioRecorderProp
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Cleanup old URL
+    cleanupAudioUrl();
+
     const url = URL.createObjectURL(file);
+    setCurrentAudioUrl(url);
     setAudioUrl(url);
     setAudioSize(file.size);
     setDuration(0);
@@ -172,13 +203,14 @@ export default function AudioRecorder({ onRecordingComplete }: AudioRecorderProp
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      cleanupAudioUrl(); // Revoke URL on unmount
       if (timerRef.current) clearInterval(timerRef.current);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [currentAudioUrl]);
 
   return (
     <div className="w-full">
@@ -223,24 +255,39 @@ export default function AudioRecorder({ onRecordingComplete }: AudioRecorderProp
         {/* Record button */}
         <button
           onClick={isRecording ? stopRecording : startRecording}
+          disabled={isInitializing}
           className={`
             relative w-20 h-20 rounded-full transition-all duration-300
             flex items-center justify-center
-            ${isRecording
+            ${isInitializing
+              ? 'bg-zinc-400 cursor-not-allowed'
+              : isRecording
               ? 'bg-red-500 hover:bg-red-600 scale-110'
               : 'bg-zinc-900 hover:bg-zinc-800'
             }
           `}
         >
-          <div
-            className={`
-              transition-all duration-300
-              ${isRecording
-                ? 'w-6 h-6 rounded-sm bg-white'
-                : 'w-6 h-6 rounded-full bg-red-500'
-              }
-            `}
-          />
+          {isInitializing ? (
+            <svg className="w-6 h-6 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+          ) : (
+            <div
+              className={`
+                transition-all duration-300
+                ${isRecording
+                  ? 'w-6 h-6 rounded-sm bg-white'
+                  : 'w-6 h-6 rounded-full bg-red-500'
+                }
+              `}
+            />
+          )}
+          {isInitializing && (
+            <span className="absolute -bottom-8 text-sm text-zinc-600">
+              Initializing...
+            </span>
+          )}
           {isRecording && (
             <span className="absolute -bottom-8 text-sm text-zinc-600">
               Recording...

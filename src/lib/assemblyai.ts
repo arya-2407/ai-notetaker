@@ -22,10 +22,17 @@ export async function transcribeAudio(audioData: Buffer): Promise<string> {
   });
 
   if (!uploadResponse.ok) {
-    throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+    const errorBody = await uploadResponse.text();
+    throw new Error(`Upload failed: ${uploadResponse.statusText}. ${errorBody}`);
   }
 
-  const { upload_url } = await uploadResponse.json();
+  const uploadResult = await uploadResponse.json();
+  const upload_url = uploadResult.upload_url;
+
+  // Validate response
+  if (!upload_url) {
+    throw new Error('Invalid upload response: missing upload_url');
+  }
 
   // Step 2: Create transcription request
   const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
@@ -38,18 +45,32 @@ export async function transcribeAudio(audioData: Buffer): Promise<string> {
   });
 
   if (!transcriptResponse.ok) {
-    throw new Error(`Transcription request failed: ${transcriptResponse.statusText}`);
+    const errorBody = await transcriptResponse.text();
+    throw new Error(`Transcription request failed: ${transcriptResponse.statusText}. ${errorBody}`);
   }
 
-  const { id } = await transcriptResponse.json();
+  const transcriptResult = await transcriptResponse.json();
+  const id = transcriptResult.id;
 
-  // Step 3: Poll for completion
+  if (!id) {
+    throw new Error('Invalid transcription response: missing id');
+  }
+
+  // Step 3: Poll for completion with timeout
   const pollingEndpoint = `https://api.assemblyai.com/v2/transcript/${id}`;
+  const MAX_POLLS = 120; // 120 polls * 3s = 6 minutes max
+  const POLL_INTERVAL = 3000;
+  let pollCount = 0;
 
-  while (true) {
+  while (pollCount < MAX_POLLS) {
     const pollingResponse = await fetch(pollingEndpoint, {
       headers: { authorization: apiKey },
     });
+
+    if (!pollingResponse.ok) {
+      const errorBody = await pollingResponse.text();
+      throw new Error(`Polling failed: ${pollingResponse.statusText}. ${errorBody}`);
+    }
 
     const result = await pollingResponse.json();
 
@@ -61,7 +82,11 @@ export async function transcribeAudio(audioData: Buffer): Promise<string> {
       throw new Error(result.error || 'Transcription failed');
     }
 
-    // Wait 3 seconds before polling again
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    // Status is 'queued' or 'processing', continue polling
+    pollCount++;
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
   }
+
+  // Timeout reached
+  throw new Error(`Transcription timeout: exceeded ${MAX_POLLS * POLL_INTERVAL / 1000} seconds`);
 }
