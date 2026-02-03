@@ -66,8 +66,6 @@ ${instruction}`;
 
     const responseText = completion.choices[0]?.message?.content || '';
 
-    console.log('Kimi refine response:', JSON.stringify(responseText));
-
     // Parse the JSON response
     let notes;
     try {

@@ -62,8 +62,6 @@ export async function POST(request: NextRequest) {
 
     const responseText = completion.choices[0]?.message?.content || '';
 
-    console.log('Kimi response:', JSON.stringify(responseText));
-
     // Parse the JSON response
     let notes;
     try {
@@ -93,7 +91,7 @@ export async function POST(request: NextRequest) {
       try {
         await deleteFile(fileId);
       } catch {
-        console.warn(`Failed to delete file ${fileId}`);
+        // File cleanup failed silently - non-critical
       }
     }
   }
