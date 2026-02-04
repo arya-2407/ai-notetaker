@@ -253,7 +253,7 @@ export default function PDFDocumentComponent({ notes, title = 'Lecture Notes' }:
         </View>
 
         {/* Footer */}
-        <Text style={styles.footer}>Generated with Notetaker</Text>
+        {/* <Text style={styles.footer}>Generated with Notetaker</Text> */}
       </Page>
     </Document>
   );
