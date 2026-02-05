@@ -7,34 +7,47 @@ import {
   CORNELL_NOTES_PROMPT,
 } from '@/lib/moonshot';
 import { env } from '@/lib/env';
+import { getObjectFromR2, deleteObjectFromR2 } from '@/lib/r2';
+
+interface GenerateNotesRequest {
+  transcript?: string;
+  pdfR2Keys?: Array<{ key: string; fileName: string }>;
+}
 
 export async function POST(request: NextRequest) {
   const uploadedFileIds: string[] = [];
+  const r2KeysToClean: string[] = [];
 
   try {
-    const formData = await request.formData();
-    const transcript = formData.get('transcript') as string || '';
-    const pdfFiles = formData.getAll('pdfs') as File[];
+    const body = await request.json() as GenerateNotesRequest;
+    const { transcript = '', pdfR2Keys = [] } = body;
 
-    if (!transcript && pdfFiles.length === 0) {
+    if (!transcript && pdfR2Keys.length === 0) {
       return NextResponse.json(
         { error: 'Provide a transcript or at least one PDF' },
         { status: 400 }
       );
     }
 
-    // Upload PDFs to Moonshot and get their content
+    // Fetch PDFs from R2, upload to Moonshot, and extract content
     const pdfContents: string[] = [];
 
-    for (const pdf of pdfFiles) {
-      const arrayBuffer = await pdf.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
+    for (const { key, fileName } of pdfR2Keys) {
+      if (!key.startsWith('pdf/')) {
+        return NextResponse.json(
+          { error: `Invalid R2 key: ${key}` },
+          { status: 400 }
+        );
+      }
 
-      const fileId = await uploadFileToMoonshot(buffer, pdf.name);
+      r2KeysToClean.push(key);
+
+      const buffer = await getObjectFromR2(key);
+      const fileId = await uploadFileToMoonshot(buffer, fileName);
       uploadedFileIds.push(fileId);
 
       const content = await getFileContent(fileId);
-      pdfContents.push(`--- Content from ${pdf.name} ---\n${content}`);
+      pdfContents.push(`--- Content from ${fileName} ---\n${content}`);
     }
 
     // Build the content for the AI
@@ -65,7 +78,6 @@ export async function POST(request: NextRequest) {
     // Parse the JSON response
     let notes;
     try {
-      // Extract JSON from response (handle potential markdown code blocks)
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No JSON found in response');
@@ -80,18 +92,25 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ notes });
   } catch (error) {
-    console.error('Note generation error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to generate notes' },
       { status: 500 }
     );
   } finally {
-    // Clean up uploaded files
+    // Clean up Moonshot files
     for (const fileId of uploadedFileIds) {
       try {
         await deleteFile(fileId);
       } catch {
-        // File cleanup failed silently - non-critical
+        // Non-critical
+      }
+    }
+    // Clean up R2 objects
+    for (const key of r2KeysToClean) {
+      try {
+        await deleteObjectFromR2(key);
+      } catch {
+        // Non-critical — lifecycle policy catches orphans
       }
     }
   }
