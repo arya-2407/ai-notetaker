@@ -215,25 +215,36 @@ export default function AudioRecorder({ onRecordingComplete }: AudioRecorderProp
   return (
     <div className="w-full">
       <div className="flex flex-col items-center gap-6">
-        {/* Waveform visualization */}
-        <div className="w-full h-24 bg-[#faf9f7] rounded-lg overflow-hidden border border-zinc-200">
-          {isRecording ? (
-            <canvas
-              ref={canvasRef}
-              width={600}
-              height={96}
-              className="w-full h-full"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              {audioUrl ? (
-                <audio src={audioUrl} controls className="w-full max-w-md px-4" />
-              ) : (
+        {/* Waveform / Audio player */}
+        {audioUrl && !isRecording ? (
+          <div className="flex items-center gap-2 w-full max-w-md px-4">
+            <audio src={audioUrl} controls className="w-full" />
+            <a
+              href={audioUrl}
+              download="recording.webm"
+              title="Download recording"
+            >
+              <svg className="w-6 h-6 text-zinc-900 hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
+              </svg>
+            </a>
+          </div>
+        ) : (
+          <div className="w-full h-24 bg-[#faf9f7] rounded-lg overflow-hidden border border-zinc-200">
+            {isRecording ? (
+              <canvas
+                ref={canvasRef}
+                width={600}
+                height={96}
+                className="w-full h-full"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
                 <p className="text-zinc-400 text-sm">Ready to record</p>
-              )}
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Duration display */}
         <div className="text-center">

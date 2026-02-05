@@ -192,7 +192,7 @@ export default function Home() {
             <span className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-zinc-900 text-white text-xs sm:text-sm font-medium">
               1
             </span>
-            <h2 className="text-lg sm:text-xl font-medium text-zinc-900">Record Audio</h2>
+            <h2 className="text-lg sm:text-xl font-medium text-zinc-900">Record and Save Audio</h2>
           </div>
 
           <div className="bg-white rounded-xl p-5 sm:p-8 shadow-sm border border-zinc-100">
