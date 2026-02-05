@@ -35,7 +35,6 @@ async function uploadToR2(
   file: Blob,
   fileType: string,
   fileName?: string,
-  onProgress?: (percent: number) => void
 ): Promise<string> {
   const params = new URLSearchParams({ type: fileType });
   if (fileName) params.set('name', fileName);
@@ -48,30 +47,15 @@ async function uploadToR2(
 
   const { url, key } = await urlResponse.json();
 
-  await new Promise<void>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-
-    xhr.upload.addEventListener('progress', (event) => {
-      if (event.lengthComputable && onProgress) {
-        onProgress(Math.round((event.loaded / event.total) * 100));
-      }
-    });
-
-    xhr.addEventListener('load', () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
-      } else {
-        reject(new Error(`Upload failed with status ${xhr.status}`));
-      }
-    });
-
-    xhr.addEventListener('error', () => reject(new Error('Upload failed')));
-    xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
-
-    xhr.open('PUT', url);
-    xhr.setRequestHeader('Content-Type', CONTENT_TYPES[fileType] || 'application/octet-stream');
-    xhr.send(file);
+  const uploadResponse = await fetch(url, {
+    method: 'PUT',
+    headers: { 'Content-Type': CONTENT_TYPES[fileType] || 'application/octet-stream' },
+    body: file,
   });
+
+  if (!uploadResponse.ok) {
+    throw new Error(`Upload failed with status ${uploadResponse.status}`);
+  }
 
   return key;
 }
@@ -87,8 +71,6 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [notesReady, setNotesReady] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
 
   const TRANSCRIPT_PREVIEW_LENGTH = 500;
 
@@ -118,25 +100,14 @@ export default function Home() {
     setIsGenerating(true);
     setGenerateError(null);
     setNotesReady(false);
-    setUploadProgress(0);
 
     try {
       // Upload PDFs to R2 first
       const pdfR2Keys: Array<{ key: string; fileName: string }> = [];
 
-      if (pdfFiles.length > 0) {
-        setIsUploading(true);
-
-        for (let i = 0; i < pdfFiles.length; i++) {
-          const pdf = pdfFiles[i];
-          const key = await uploadToR2(pdf.file, 'pdf', pdf.fileName, (percent) => {
-            const fileProgress = (i / pdfFiles.length + percent / 100 / pdfFiles.length) * 100;
-            setUploadProgress(Math.round(fileProgress));
-          });
-          pdfR2Keys.push({ key, fileName: pdf.fileName });
-        }
-
-        setIsUploading(false);
+      for (const pdf of pdfFiles) {
+        const key = await uploadToR2(pdf.file, 'pdf', pdf.fileName);
+        pdfR2Keys.push({ key, fileName: pdf.fileName });
       }
 
       const response = await fetch('/api/generate-notes', {
@@ -157,8 +128,6 @@ export default function Home() {
       setGenerateError(error instanceof Error ? error.message : 'Failed to generate notes');
     } finally {
       setIsGenerating(false);
-      setIsUploading(false);
-      setUploadProgress(0);
     }
   };
 
@@ -177,17 +146,11 @@ export default function Home() {
 
     setIsTranscribing(true);
     setTranscribeError(null);
-    setUploadProgress(0);
-    setIsUploading(true);
 
     try {
       // Upload audio to R2 first
       const fileType = getAudioFileType(audioBlob);
-      const r2Key = await uploadToR2(audioBlob, fileType, undefined, (percent) => {
-        setUploadProgress(percent);
-      });
-
-      setIsUploading(false);
+      const r2Key = await uploadToR2(audioBlob, fileType);
 
       // Call transcribe API with R2 key
       const response = await fetch('/api/transcribe', {
@@ -207,8 +170,6 @@ export default function Home() {
       setTranscribeError(error instanceof Error ? error.message : 'Transcription failed');
     } finally {
       setIsTranscribing(false);
-      setIsUploading(false);
-      setUploadProgress(0);
     }
   };
 
@@ -288,21 +249,7 @@ export default function Home() {
                   {isTranscribing ? 'Transcribing...' : 'Transcribe Audio'}
                 </button>
                 {isTranscribing && (
-                  <div className="mt-3">
-                    {isUploading ? (
-                      <div>
-                        <div className="w-full bg-zinc-200 rounded-full h-1.5 mb-2">
-                          <div
-                            className="bg-zinc-900 h-1.5 rounded-full transition-all duration-300"
-                            style={{ width: `${uploadProgress}%` }}
-                          />
-                        </div>
-                        <p className="text-sm text-zinc-500">Uploading audio... {uploadProgress}%</p>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-zinc-500">Transcribing... This may take a moment.</p>
-                    )}
-                  </div>
+                  <p className="text-sm text-zinc-500 mt-3">This may take a moment...</p>
                 )}
                 {transcribeError && (
                   <p className="text-sm text-red-600 mt-3">{transcribeError}</p>
@@ -378,28 +325,14 @@ export default function Home() {
             {!transcript && pdfFiles.length === 0 ? (
               <p className="text-center text-zinc-400">Add a transcript or PDF first</p>
             ) : isGenerating ? (
-              <div className="flex flex-col items-center w-full">
-                {isUploading ? (
-                  <div className="w-full max-w-xs">
-                    <div className="w-full bg-zinc-200 rounded-full h-1.5 mb-2">
-                      <div
-                        className="bg-zinc-900 h-1.5 rounded-full transition-all duration-300"
-                        style={{ width: `${uploadProgress}%` }}
-                      />
-                    </div>
-                    <p className="text-zinc-600 text-sm text-center">Uploading files... {uploadProgress}%</p>
-                  </div>
-                ) : (
-                  <>
-                    <DotLottieReact
-                      src="https://lottie.host/47c3870e-33fd-4f76-bbf7-f40fca2d71f7/U6WWKUzOWH.lottie"
-                      loop
-                      autoplay
-                      style={{ width: 100, height: 100 }}
-                    />
-                    <p className="text-zinc-600 mt-2">Generating...</p>
-                  </>
-                )}
+              <div className="flex flex-col items-center">
+                <DotLottieReact
+                  src="https://lottie.host/47c3870e-33fd-4f76-bbf7-f40fca2d71f7/U6WWKUzOWH.lottie"
+                  loop
+                  autoplay
+                  style={{ width: 100, height: 100 }}
+                />
+                <p className="text-zinc-600 mt-2">Generating...</p>
               </div>
             ) : notesReady ? (
               <div className="flex items-center gap-3">
