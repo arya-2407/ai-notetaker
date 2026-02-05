@@ -9,6 +9,20 @@ export const env = {
     model: 'kimi-k2.5',
     isConfigured: !!process.env.MOONSHOT_API_KEY && process.env.MOONSHOT_API_KEY !== 'your_moonshot_api_key_here',
   },
+  r2: {
+    accountId: process.env.R2_ACCOUNT_ID || '',
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+    bucketName: process.env.R2_BUCKET_NAME || '',
+    endpoint: process.env.R2_ENDPOINT || '',
+    isConfigured: !!(
+      process.env.R2_ACCOUNT_ID &&
+      process.env.R2_ACCESS_KEY_ID &&
+      process.env.R2_SECRET_ACCESS_KEY &&
+      process.env.R2_BUCKET_NAME &&
+      process.env.R2_ENDPOINT
+    ),
+  },
 };
 
 export function validateEnv() {
